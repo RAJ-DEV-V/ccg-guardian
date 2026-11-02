@@ -1,2 +1,2 @@
 @echo off
-"%~dp0guardian-dashboard.exe"
+"%~dp0guardian-dashboard.exe" %*
