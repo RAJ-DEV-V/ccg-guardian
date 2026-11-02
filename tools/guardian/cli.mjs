@@ -7,6 +7,7 @@
  * github: https://github.com/RAJ-DEV-V
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -15,7 +16,7 @@ import { Severity, Verdict } from './core/types.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '../..');
+let projectRoot = path.resolve(__dirname, '../..');
 
 // Parse CLI flags
 const args = process.argv.slice(2);
@@ -25,6 +26,17 @@ const isArchOnly = args.includes('--architecture');
 const isDbOnly = args.includes('--database');
 const isJsonOutput = args.includes('--json');
 const isTestMode = args.includes('--test') || args.includes('test');
+
+// Check for target project path flag or positional arg
+const projectArgIdx = args.findIndex(a => a === '--project' || a === '-p');
+if (projectArgIdx !== -1 && args[projectArgIdx + 1]) {
+  projectRoot = path.resolve(args[projectArgIdx + 1]);
+} else {
+  const positionalPath = args.find(a => !a.startsWith('-') && a !== 'test');
+  if (positionalPath && fs.existsSync(positionalPath)) {
+    projectRoot = path.resolve(positionalPath);
+  }
+}
 
 if (isTestMode) {
   const testScript = path.join(__dirname, 'tests/synthetic-fixtures.test.mjs');

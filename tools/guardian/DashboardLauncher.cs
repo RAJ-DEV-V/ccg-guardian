@@ -40,12 +40,18 @@ namespace EngineeringGuardian
                 return;
             }
 
+            string extraArgs = "";
+            if (args.Length > 0)
+            {
+                extraArgs = " \"" + string.Join("\" \"", args) + "\"";
+            }
+
             Console.WriteLine("[+] Guardian Root Directory: " + Path.GetFullPath(Path.Combine(appDir, "..")));
             Console.WriteLine("[+] Launching Live Telemetry Engine on http://localhost:4321 ...");
 
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = "node";
-            psi.Arguments = "\"" + serverScript + "\"";
+            psi.Arguments = "\"" + serverScript + "\"" + extraArgs;
             psi.UseShellExecute = false;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;

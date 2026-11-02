@@ -1,7 +1,7 @@
 /**
  * Engineering Guardian (CCG / CCEG) Live Dashboard Server
  * Zero-dependency local dashboard serving real-time telemetry, live audits,
- * and the 16-Row Assurance Matrix.
+ * and multi-project connectivity.
  * 
  * credits to developer rajvansh mishra, backend developer, lovely professional university
  * github: https://github.com/RAJ-DEV-V
@@ -12,19 +12,34 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exec, execSync } from 'node:child_process';
+import { GuardianOrchestrator } from './orchestrator.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '../..');
-const reportJsonPath = path.join(projectRoot, 'reports/guardian/latest.json');
-const reportMdPath = path.join(projectRoot, 'reports/guardian/latest.md');
+
+// Parse CLI project argument
+const args = process.argv.slice(2);
+let activeProjectRoot = path.resolve(__dirname, '../..');
+
+const projectArgIdx = args.findIndex(a => a === '--project' || a === '-p');
+if (projectArgIdx !== -1 && args[projectArgIdx + 1]) {
+  activeProjectRoot = path.resolve(args[projectArgIdx + 1]);
+} else {
+  const positionalPath = args.find(a => !a.startsWith('-') && a !== '--open');
+  if (positionalPath && fs.existsSync(positionalPath)) {
+    activeProjectRoot = path.resolve(positionalPath);
+  }
+}
 
 const PORT = process.env.PORT || 4321;
 
-function getLatestReport() {
+function getLatestReport(targetDir = activeProjectRoot) {
+  const reportJsonPath = path.join(targetDir, 'reports/guardian/latest.json');
   if (fs.existsSync(reportJsonPath)) {
     try {
-      return JSON.parse(fs.readFileSync(reportJsonPath, 'utf8'));
+      const data = JSON.parse(fs.readFileSync(reportJsonPath, 'utf8'));
+      data.connectedProject = targetDir;
+      return data;
     } catch {
       return null;
     }
@@ -63,7 +78,7 @@ function getDashboardHtml() {
       flex-direction: column;
     }
     header {
-      background: rgba(17, 24, 39, 0.8);
+      background: rgba(17, 24, 39, 0.9);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--card-border);
       padding: 1rem 2rem;
@@ -111,6 +126,35 @@ function getDashboardHtml() {
     }
     .btn-secondary:hover { background: #4b5563; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .project-strip {
+      background: #131d33;
+      border-bottom: 1px solid var(--card-border);
+      padding: 0.75rem 2rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .project-strip label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      white-space: nowrap;
+    }
+    .project-strip input {
+      flex: 1;
+      background: #0b0f19;
+      border: 1px solid #2a3852;
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      color: #e2e8f0;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+    .project-strip input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
 
     main {
       flex: 1;
@@ -283,9 +327,15 @@ function getDashboardHtml() {
     <div class="header-actions">
       <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted)">Loading...</span>
       <button class="btn btn-secondary" onclick="runSyntheticTests()" id="btnTests">🧪 Run Tests</button>
-      <button class="btn" onclick="triggerAudit()" id="btnAudit">🔄 Run Full Audit</button>
+      <button class="btn" onclick="triggerAudit()" id="btnAudit">🔄 Run Audit</button>
     </div>
   </header>
+
+  <div class="project-strip">
+    <label>📁 Target Project:</label>
+    <input type="text" id="projectPathInput" value="${activeProjectRoot.replace(/\\/g, '\\\\')}" placeholder="Paste folder path to any project (e.g. C:\\...\\campus-connect-lpu)" />
+    <button class="btn btn-secondary" onclick="connectProject()" id="btnConnect">🔗 Connect & Audit</button>
+  </div>
 
   <main>
     <div id="verdictBanner" class="banner BLOCKED">
@@ -372,21 +422,25 @@ function getDashboardHtml() {
     function renderDashboard(data) {
       if (!data) return;
 
+      if (data.connectedProject) {
+        document.getElementById('projectPathInput').value = data.connectedProject;
+      }
+
       const isApproved = data.verdict === 'APPROVED';
       const banner = document.getElementById('verdictBanner');
-      banner.className = 'banner ' + data.verdict;
+      banner.className = 'banner ' + (data.verdict || 'BLOCKED');
 
       document.getElementById('verdictTitle').innerHTML = isApproved 
         ? '✅ ASSURANCE VERDICT: [APPROVED]' 
         : '🛑 ASSURANCE VERDICT: [BLOCKED]';
       document.getElementById('verdictDesc').innerText = isApproved
         ? 'All 10 engineering engines passed. Codebase is certified safe for deployment.'
-        : data.blockerCount + ' Critical/High defect(s) detected. Deployment gate closed.';
+        : (data.blockerCount || 0) + ' Critical/High defect(s) detected. Deployment gate closed.';
 
       document.getElementById('statFiles').innerText = data.filesScannedCount || 0;
       document.getElementById('statCritical').innerText = (data.findings || []).filter(f => f.severity === 'CRITICAL').length;
       document.getElementById('statHigh').innerText = (data.findings || []).filter(f => f.severity === 'HIGH').length;
-      document.getElementById('lastUpdated').innerText = 'Audited in ' + data.durationMs + 'ms';
+      document.getElementById('lastUpdated').innerText = (data.durationMs ? 'Audited in ' + data.durationMs + 'ms' : 'Live Connected');
 
       // Render Matrix
       const tbody = document.getElementById('matrixTableBody');
@@ -433,16 +487,45 @@ function getDashboardHtml() {
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    async function connectProject() {
+      const input = document.getElementById('projectPathInput');
+      const btn = document.getElementById('btnConnect');
+      const targetPath = input.value.trim();
+      if (!targetPath) return alert('Please enter a valid directory path.');
+
+      btn.disabled = true;
+      btn.innerText = '🔗 Connecting...';
+      try {
+        const res = await fetch('/api/project', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectPath: targetPath })
+        });
+        const data = await res.json();
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          renderDashboard(data);
+        }
+      } catch (err) {
+        alert('Failed to connect to target project: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🔗 Connect & Audit';
+      }
+    }
+
     async function triggerAudit() {
       const btn = document.getElementById('btnAudit');
       btn.disabled = true;
       btn.innerText = '⏳ Auditing...';
       try {
-        await fetch('/api/audit', { method: 'POST' });
-        await loadStats();
+        const res = await fetch('/api/audit', { method: 'POST' });
+        const data = await res.json();
+        renderDashboard(data);
       } finally {
         btn.disabled = false;
-        btn.innerText = '🔄 Run Full Audit';
+        btn.innerText = '🔄 Run Audit';
       }
     }
 
@@ -461,13 +544,13 @@ function getDashboardHtml() {
     }
 
     loadStats();
-    setInterval(loadStats, 4000);
+    setInterval(loadStats, 5000);
   </script>
 </body>
 </html>`;
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
   if (req.method === 'GET' && parsedUrl.pathname === '/') {
@@ -477,28 +560,71 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'GET' && parsedUrl.pathname === '/api/stats') {
-    const report = getLatestReport();
+    let report = getLatestReport(activeProjectRoot);
+    if (!report) {
+      // If no report exists yet, run an initial audit
+      const orchestrator = new GuardianOrchestrator({ rootDir: activeProjectRoot });
+      const auditResult = await orchestrator.audit({ mode: 'diff' });
+      report = auditResult.reportData;
+      report.connectedProject = activeProjectRoot;
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(report || { status: 'NO_REPORT_FOUND' }));
+    res.end(JSON.stringify(report));
+    return;
+  }
+
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/project') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const targetPath = payload.projectPath;
+        if (!targetPath || !fs.existsSync(targetPath)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: `Directory not found: ${targetPath}` }));
+          return;
+        }
+
+        activeProjectRoot = path.resolve(targetPath);
+        console.log(`[Dashboard] Switched active project to: ${activeProjectRoot}`);
+
+        const orchestrator = new GuardianOrchestrator({ rootDir: activeProjectRoot });
+        const auditResult = await orchestrator.audit({ mode: 'diff' });
+        const report = auditResult.reportData;
+        report.connectedProject = activeProjectRoot;
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(report));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
     return;
   }
 
   if (req.method === 'POST' && parsedUrl.pathname === '/api/audit') {
     try {
-      execSync('node tools/guardian/cli.mjs', { cwd: projectRoot, timeout: 30000 });
-    } catch {
-      // CLI exits with 1 on blockers, which is normal
+      const orchestrator = new GuardianOrchestrator({ rootDir: activeProjectRoot });
+      const auditResult = await orchestrator.audit({ mode: 'diff' });
+      const report = auditResult.reportData;
+      report.connectedProject = activeProjectRoot;
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(report));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
     }
-    const report = getLatestReport();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(report || { status: 'DONE' }));
     return;
   }
 
   if (req.method === 'POST' && parsedUrl.pathname === '/api/test') {
     try {
-      const out = execSync('node tools/guardian/tests/synthetic-fixtures.test.mjs', {
-        cwd: projectRoot,
+      const orchestratorDir = path.resolve(__dirname);
+      const testFile = path.join(orchestratorDir, 'tests/synthetic-fixtures.test.mjs');
+      const out = execSync(`node "${testFile}"`, {
         encoding: 'utf8',
         timeout: 15000
       });
@@ -518,7 +644,8 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`\n================================================================`);
   console.log(`  🛡️  ENGINEERING GUARDIAN DASHBOARD ACTIVE`);
-  console.log(`  URL: http://localhost:${PORT}`);
+  console.log(`  URL:             http://localhost:${PORT}`);
+  console.log(`  Target Project:  ${activeProjectRoot}`);
   console.log(`================================================================`);
   console.log(`credits to developer rajvansh mishra, backend developer, lovely professional university (github: https://github.com/RAJ-DEV-V)\n`);
 });
