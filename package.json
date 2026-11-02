@@ -1,0 +1,31 @@
+{
+  "name": "ccg-guardian",
+  "version": "1.0.0",
+  "description": "Universal Code Guardian (CCG) - Zero-Dependency Codebase Quality, Security & Architecture Assurance Engine",
+  "type": "module",
+  "bin": {
+    "guardian": "./tools/guardian/cli.mjs",
+    "ccg": "./tools/guardian/cli.mjs"
+  },
+  "scripts": {
+    "guardian": "node tools/guardian/cli.mjs",
+    "guardian:full": "node tools/guardian/cli.mjs --full",
+    "guardian:security": "node tools/guardian/cli.mjs --security",
+    "guardian:architecture": "node tools/guardian/cli.mjs --architecture",
+    "guardian:database": "node tools/guardian/cli.mjs --database",
+    "guardian:test": "node tools/guardian/tests/synthetic-fixtures.test.mjs",
+    "guardian:dashboard": "node tools/guardian/dashboard-server.mjs --open",
+    "test": "node tools/guardian/tests/synthetic-fixtures.test.mjs"
+  },
+  "keywords": [
+    "guardian",
+    "security-scanner",
+    "architecture-linter",
+    "zero-dependency",
+    "ast-analysis",
+    "vibe-coding-defense",
+    "code-assurance"
+  ],
+  "author": "Rajvansh Mishra <https://github.com/RAJ-DEV-V>",
+  "license": "MIT"
+}
