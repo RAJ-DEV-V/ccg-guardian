@@ -53,6 +53,9 @@ function getDashboardHtml() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Engineering Guardian | Live Project Assurance Dashboard</title>
   <style>
     :root {
@@ -132,6 +135,11 @@ function getDashboardHtml() {
       border-bottom: 1px solid var(--card-border);
       padding: 0.75rem 2rem;
       display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .project-strip-row {
+      display: flex;
       gap: 1rem;
       align-items: center;
     }
@@ -154,6 +162,20 @@ function getDashboardHtml() {
     .project-strip input:focus {
       outline: none;
       border-color: var(--accent-blue);
+    }
+    .preset-pill {
+      background: #1e293b;
+      color: #93c5fd;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-pill:hover {
+      background: #2563eb;
+      color: white;
     }
 
     main {
@@ -310,20 +332,21 @@ function getDashboardHtml() {
       border-top: 1px solid #243048;
     }
     .btn-copy {
-      background: #2563eb;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: white;
       border: none;
-      padding: 0.35rem 0.75rem;
+      padding: 0.45rem 0.85rem;
       border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
       transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
-    .btn-copy:hover { background: #1d4ed8; }
+    .btn-copy:hover { transform: translateY(-1px); box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.4); }
     .btn-copy.copied { background: var(--success); }
 
     footer {
@@ -369,10 +392,17 @@ function getDashboardHtml() {
   </header>
 
   <div class="project-strip">
-    <label>📁 Target Project:</label>
-    <input type="text" id="projectPathInput" value="${activeProjectRoot.replace(/\\/g, '\\\\')}" placeholder="Paste folder path to any project (e.g. C:\\...\\campus-connect-lpu)" />
-    <button class="btn btn-secondary" onclick="connectProject()" id="btnConnect">🔗 Connect & Audit</button>
-    <button class="btn btn-secondary" onclick="generateAntigravityRules()" id="btnAgents">🤖 Inject AGENTS.md</button>
+    <div class="project-strip-row">
+      <label>📁 Target Project:</label>
+      <input type="text" id="projectPathInput" value="${activeProjectRoot.replace(/\\/g, '\\\\')}" placeholder="Paste folder path to any project (e.g. C:\\...\\campus-connect-lpu)" />
+      <button class="btn btn-secondary" onclick="connectProject()" id="btnConnect">🔗 Connect & Audit</button>
+      <button class="btn btn-secondary" onclick="generateAntigravityRules()" id="btnAgents">🤖 Inject AGENTS.md</button>
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center; margin-left:110px">
+      <span style="font-size:0.75rem; color:#94a3b8">Quick Presets:</span>
+      <button class="preset-pill" onclick="setAndConnect('C:\\\\Users\\\\mishr\\\\.gemini\\\\antigravity\\\\scratch\\\\campus-connect-lpu')">🏫 Campus Connect (LPU)</button>
+      <button class="preset-pill" onclick="setAndConnect('C:\\\\Users\\\\mishr\\\\.gemini\\\\antigravity\\\\scratch\\\\ccg-guardian')">🛡️ CCG Guardian (Clean Engine)</button>
+    </div>
   </div>
 
   <main>
@@ -451,7 +481,7 @@ function getDashboardHtml() {
 
     async function loadStats() {
       try {
-        const res = await fetch('/api/stats');
+        const res = await fetch('/api/stats?t=' + Date.now());
         const data = await res.json();
         currentReport = data;
         renderDashboard(data);
@@ -502,18 +532,28 @@ function getDashboardHtml() {
 
       // Render Blockers List with AI Prompt and Where/How to fix
       const blockers = (data.findings || []).filter(f => f.severity === 'CRITICAL' || f.severity === 'HIGH');
+      const allDisplayFindings = blockers.length > 0 ? blockers : (data.findings || []);
       document.getElementById('blockerCountBadge').innerText = blockers.length;
       const blockersList = document.getElementById('blockersList');
 
-      if (blockers.length === 0) {
-        blockersList.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--success)">✅ Zero blockers detected! Safe to commit and deploy.</div>';
+      if (allDisplayFindings.length === 0) {
+        blockersList.innerHTML = \`
+          <div style="text-align:center; padding: 2rem; color: var(--success)">
+            <div style="font-size:2rem; margin-bottom:0.5rem">🎉</div>
+            <div style="font-weight:700; font-size:1.1rem; margin-bottom:0.5rem">Zero Defects Detected!</div>
+            <div style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1rem">This repository passes all 10 engineering gates with 0 blockers.</div>
+            <button class="btn btn-secondary" style="margin:0 auto;" onclick="setAndConnect('C:\\\\\\\\Users\\\\\\\\mishr\\\\\\\\.gemini\\\\\\\\antigravity\\\\\\\\scratch\\\\\\\\campus-connect-lpu')">
+              👉 Connect & Inspect Campus Connect (LPU)
+            </button>
+          </div>
+        \`;
       } else {
-        blockersList.innerHTML = blockers.map((b, idx) => {
+        blockersList.innerHTML = allDisplayFindings.map((b, idx) => {
           const promptText = b.aiPrompt || generateFallbackPrompt(b);
           return \`
           <div class="finding-item" id="finding-\${idx}">
             <div class="finding-header">
-              <span class="badge \${b.severity === 'CRITICAL' ? 'badge-fail' : 'badge-warn'}">\${b.severity}</span>
+              <span class="badge \${b.severity === 'CRITICAL' ? 'badge-fail' : (b.severity === 'HIGH' ? 'badge-warn' : 'badge-pass')}">\${b.severity}</span>
               <span class="finding-loc">📍 \${b.file}\${b.line ? ':' + b.line : ''}</span>
             </div>
             <div class="finding-title">\${b.title}</div>
@@ -521,9 +561,9 @@ function getDashboardHtml() {
             \${b.snippet ? \`<div class="snippet-box"><strong>Current Code:</strong>\n\${escapeHtml(b.snippet)}</div>\` : ''}
             <div class="remed-box"><strong>🛠️ How & Where to Fix:</strong><br>\${escapeHtml(b.remediation)}</div>
             <div class="action-bar">
-              <span style="font-size:0.75rem; color:var(--text-muted)">Ready for Antigravity, ChatGPT or Claude</span>
+              <span style="font-size:0.75rem; color:var(--text-muted)">Ready for Antigravity, ChatGPT, Claude or Cursor</span>
               <button class="btn-copy" onclick="copyAiPrompt(\${idx}, this)">
-                📋 Copy Fix Prompt for AI
+                🤖 Copy AI Fix Prompt
               </button>
             </div>
             <textarea id="prompt-val-\${idx}" style="display:none;">\${escapeHtml(promptText)}</textarea>
@@ -611,6 +651,11 @@ function getDashboardHtml() {
       }
     }
 
+    function setAndConnect(targetPath) {
+      document.getElementById('projectPathInput').value = targetPath;
+      connectProject();
+    }
+
     async function connectProject() {
       const input = document.getElementById('projectPathInput');
       const btn = document.getElementById('btnConnect');
@@ -677,6 +722,11 @@ function getDashboardHtml() {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Enforce zero caching so browsers always load live UI and telemetry
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
   if (req.method === 'GET' && parsedUrl.pathname === '/') {

@@ -46,6 +46,38 @@ namespace EngineeringGuardian
                 extraArgs = " \"" + string.Join("\" \"", args) + "\"";
             }
 
+            // Clean up any stale or zombie node process holding port 4321
+            try
+            {
+                Process netstat = new Process();
+                netstat.StartInfo = new ProcessStartInfo("cmd.exe", "/c netstat -ano | findstr :4321 | findstr LISTENING")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                netstat.Start();
+                string output = netstat.StandardOutput.ReadToEnd();
+                netstat.WaitForExit();
+                if (!string.IsNullOrEmpty(output))
+                {
+                    string[] lines = output.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string line in lines)
+                    {
+                        string[] parts = line.Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length > 0)
+                        {
+                            int pid;
+                            if (int.TryParse(parts[parts.Length - 1], out pid))
+                            {
+                                try { Process.GetProcessById(pid).Kill(); } catch { }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
             Console.WriteLine("[+] Guardian Root Directory: " + Path.GetFullPath(Path.Combine(appDir, "..")));
             Console.WriteLine("[+] Launching Live Telemetry Engine on http://localhost:4321 ...");
 
