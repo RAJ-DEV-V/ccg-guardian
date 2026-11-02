@@ -1,7 +1,7 @@
 /**
  * Engineering Guardian (CCG / CCEG) Live Dashboard Server
  * Zero-dependency local dashboard serving real-time telemetry, live audits,
- * and multi-project connectivity.
+ * multi-project connectivity, and one-click AI prompts for Antigravity & ChatGPT.
  * 
  * credits to developer rajvansh mishra, backend developer, lovely professional university
  * github: https://github.com/RAJ-DEV-V
@@ -61,6 +61,7 @@ function getDashboardHtml() {
       --card-border: #1f293d;
       --accent-blue: #3b82f6;
       --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
       --danger: #ef4444;
       --warning: #f59e0b;
       --success: #10b981;
@@ -78,10 +79,10 @@ function getDashboardHtml() {
       flex-direction: column;
     }
     header {
-      background: rgba(17, 24, 39, 0.9);
+      background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--card-border);
-      padding: 1rem 2rem;
+      padding: 0.85rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -104,15 +105,15 @@ function getDashboardHtml() {
       font-weight: 600;
       text-transform: uppercase;
     }
-    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+    .header-actions { display: flex; gap: 0.6rem; align-items: center; }
     .btn {
       background: var(--accent-blue);
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 0.9rem;
       border-radius: 6px;
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: 0.825rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -120,11 +121,10 @@ function getDashboardHtml() {
       transition: all 0.2s;
     }
     .btn:hover { background: #2563eb; transform: translateY(-1px); }
-    .btn-secondary {
-      background: #374151;
-      color: #e5e7eb;
-    }
+    .btn-secondary { background: #374151; color: #e5e7eb; }
     .btn-secondary:hover { background: #4b5563; }
+    .btn-ai { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; }
+    .btn-ai:hover { background: linear-gradient(135deg, #6d28d9, #4338ca); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .project-strip {
@@ -146,10 +146,10 @@ function getDashboardHtml() {
       background: #0b0f19;
       border: 1px solid #2a3852;
       border-radius: 6px;
-      padding: 0.4rem 0.75rem;
+      padding: 0.45rem 0.75rem;
       color: #e2e8f0;
       font-family: monospace;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
     }
     .project-strip input:focus {
       outline: none;
@@ -158,17 +158,17 @@ function getDashboardHtml() {
 
     main {
       flex: 1;
-      max-width: 1400px;
+      max-width: 1440px;
       width: 100%;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 1.75rem 2rem;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.75rem;
     }
 
     .banner {
-      padding: 1.5rem 2rem;
+      padding: 1.25rem 2rem;
       border-radius: 12px;
       display: flex;
       justify-content: space-between;
@@ -183,12 +183,12 @@ function getDashboardHtml() {
       background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(4, 120, 87, 0.05));
       border: 1px solid rgba(16, 185, 129, 0.4);
     }
-    .banner-title { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; }
-    .banner-desc { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+    .banner-title { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; }
+    .banner-desc { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.25rem;
     }
     .stat-card {
@@ -198,18 +198,18 @@ function getDashboardHtml() {
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
-    .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-    .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; }
-    .stat-badge { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.4rem; border-radius: 4px; width: fit-content; }
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .stat-value { font-size: 1.85rem; font-weight: 800; line-height: 1; }
+    .stat-badge { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.4rem; border-radius: 4px; width: fit-content; }
 
     .content-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 2rem;
+      grid-template-columns: 1.1fr 1.3fr;
+      gap: 1.5rem;
     }
-    @media (max-width: 1024px) {
+    @media (max-width: 1100px) {
       .content-grid { grid-template-columns: 1fr; }
     }
 
@@ -218,38 +218,41 @@ function getDashboardHtml() {
       border: 1px solid var(--card-border);
       border-radius: 12px;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     .card-header {
-      padding: 1.25rem 1.5rem;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--card-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: rgba(255, 255, 255, 0.01);
     }
-    .card-title { font-size: 1.1rem; font-weight: 700; }
-    .card-body { padding: 1.5rem; }
+    .card-title { font-size: 1.05rem; font-weight: 700; }
+    .card-body { padding: 1.25rem; }
 
     .matrix-table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
     }
     .matrix-table th {
       color: var(--text-muted);
-      padding: 0.75rem 1rem;
+      padding: 0.6rem 0.85rem;
       border-bottom: 1px solid var(--card-border);
       font-weight: 600;
     }
     .matrix-table td {
-      padding: 0.875rem 1rem;
+      padding: 0.75rem 0.85rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
     .badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
       border-radius: 9999px;
-      font-size: 0.75rem;
+      font-size: 0.725rem;
       font-weight: 700;
     }
     .badge-pass { background: rgba(16, 185, 129, 0.2); color: #34d399; }
@@ -257,38 +260,71 @@ function getDashboardHtml() {
     .badge-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 
     .finding-item {
-      background: #1a2234;
-      border: 1px solid #28354d;
-      border-radius: 8px;
-      padding: 1rem;
+      background: #172033;
+      border: 1px solid #283754;
+      border-radius: 10px;
+      padding: 1.15rem;
       margin-bottom: 1rem;
+      transition: border-color 0.2s;
     }
+    .finding-item:hover { border-color: #3b82f6; }
     .finding-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.5rem;
     }
-    .finding-title { font-weight: 700; font-size: 0.95rem; }
-    .finding-loc { font-family: monospace; font-size: 0.8rem; color: #60a5fa; }
-    .finding-snippet {
-      background: #0f172a;
-      border-radius: 4px;
-      padding: 0.5rem;
+    .finding-title { font-weight: 700; font-size: 0.95rem; color: #f1f5f9; }
+    .finding-loc { font-family: monospace; font-size: 0.8rem; color: #60a5fa; background: #0f172a; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    .finding-desc { font-size: 0.85rem; color: #cbd5e1; margin: 0.4rem 0; line-height: 1.4; }
+    
+    .snippet-box {
+      background: #090e17;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
       font-family: monospace;
       font-size: 0.8rem;
-      margin: 0.5rem 0;
+      margin: 0.6rem 0;
       white-space: pre-wrap;
-      color: #e2e8f0;
+      color: #fca5a5;
       border-left: 3px solid var(--danger);
+      overflow-x: auto;
     }
-    .finding-remed {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 0.4rem 0.6rem;
-      border-radius: 4px;
+    .remed-box {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.825rem;
+      color: #a7f3d0;
+      margin: 0.6rem 0;
+      line-height: 1.4;
     }
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #243048;
+    }
+    .btn-copy {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s;
+    }
+    .btn-copy:hover { background: #1d4ed8; }
+    .btn-copy.copied { background: var(--success); }
 
     footer {
       border-top: 1px solid var(--card-border);
@@ -327,6 +363,7 @@ function getDashboardHtml() {
     <div class="header-actions">
       <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted)">Loading...</span>
       <button class="btn btn-secondary" onclick="runSyntheticTests()" id="btnTests">🧪 Run Tests</button>
+      <button class="btn btn-ai" onclick="copyMasterAiPlan()" id="btnMasterPlan">🤖 Copy Full AI Fix Plan</button>
       <button class="btn" onclick="triggerAudit()" id="btnAudit">🔄 Run Audit</button>
     </div>
   </header>
@@ -335,6 +372,7 @@ function getDashboardHtml() {
     <label>📁 Target Project:</label>
     <input type="text" id="projectPathInput" value="${activeProjectRoot.replace(/\\/g, '\\\\')}" placeholder="Paste folder path to any project (e.g. C:\\...\\campus-connect-lpu)" />
     <button class="btn btn-secondary" onclick="connectProject()" id="btnConnect">🔗 Connect & Audit</button>
+    <button class="btn btn-secondary" onclick="generateAntigravityRules()" id="btnAgents">🤖 Inject AGENTS.md</button>
   </div>
 
   <main>
@@ -394,10 +432,10 @@ function getDashboardHtml() {
 
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Critical & High Blockers</div>
+          <div class="card-title">Where to Fix & AI Solutions</div>
           <span id="blockerCountBadge" class="badge badge-fail">0</span>
         </div>
-        <div class="card-body" id="blockersList" style="max-height: 600px; overflow-y: auto;">
+        <div class="card-body" id="blockersList" style="max-height: 680px; overflow-y: auto;">
           <div style="text-align:center; color: var(--text-muted); padding: 2rem">No blockers loaded</div>
         </div>
       </div>
@@ -409,10 +447,13 @@ function getDashboardHtml() {
   </footer>
 
   <script>
+    let currentReport = null;
+
     async function loadStats() {
       try {
         const res = await fetch('/api/stats');
         const data = await res.json();
+        currentReport = data;
         renderDashboard(data);
       } catch (e) {
         console.error('Failed to fetch guardian stats:', e);
@@ -435,7 +476,7 @@ function getDashboardHtml() {
         : '🛑 ASSURANCE VERDICT: [BLOCKED]';
       document.getElementById('verdictDesc').innerText = isApproved
         ? 'All 10 engineering engines passed. Codebase is certified safe for deployment.'
-        : (data.blockerCount || 0) + ' Critical/High defect(s) detected. Deployment gate closed.';
+        : (data.blockerCount || 0) + ' Critical/High defect(s) detected. Click below to copy AI prompts or fix instructions.';
 
       document.getElementById('statFiles').innerText = data.filesScannedCount || 0;
       document.getElementById('statCritical').innerText = (data.findings || []).filter(f => f.severity === 'CRITICAL').length;
@@ -454,37 +495,120 @@ function getDashboardHtml() {
             <td style="color:var(--text-muted); font-weight:600">\${String(i+1).padStart(2, '0')}</td>
             <td style="font-weight:600">\${row.category}</td>
             <td><span class="badge \${badgeClass}">\${row.status}</span></td>
-            <td style="color:var(--text-muted); font-size:0.8rem">\${row.evidence}</td>
+            <td style="color:var(--text-muted); font-size:0.775rem">\${row.evidence}</td>
           </tr>\`;
         }).join('');
       }
 
-      // Render Blockers List
+      // Render Blockers List with AI Prompt and Where/How to fix
       const blockers = (data.findings || []).filter(f => f.severity === 'CRITICAL' || f.severity === 'HIGH');
       document.getElementById('blockerCountBadge').innerText = blockers.length;
       const blockersList = document.getElementById('blockersList');
 
       if (blockers.length === 0) {
-        blockersList.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--success)">✅ Zero blockers detected!</div>';
+        blockersList.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--success)">✅ Zero blockers detected! Safe to commit and deploy.</div>';
       } else {
-        blockersList.innerHTML = blockers.map((b, idx) => \`
-          <div class="finding-item">
+        blockersList.innerHTML = blockers.map((b, idx) => {
+          const promptText = b.aiPrompt || generateFallbackPrompt(b);
+          return \`
+          <div class="finding-item" id="finding-\${idx}">
             <div class="finding-header">
               <span class="badge \${b.severity === 'CRITICAL' ? 'badge-fail' : 'badge-warn'}">\${b.severity}</span>
-              <span class="finding-loc">\${b.file}\${b.line ? ':' + b.line : ''}</span>
+              <span class="finding-loc">📍 \${b.file}\${b.line ? ':' + b.line : ''}</span>
             </div>
             <div class="finding-title">\${b.title}</div>
-            <div style="font-size:0.85rem; color:#cbd5e1; margin-top:0.25rem">\${b.message}</div>
-            \${b.snippet ? \`<div class="finding-snippet">\${escapeHtml(b.snippet)}</div>\` : ''}
-            <div class="finding-remed"><strong>Fix:</strong> \${escapeHtml(b.remediation)}</div>
+            <div class="finding-desc">\${b.message}</div>
+            \${b.snippet ? \`<div class="snippet-box"><strong>Current Code:</strong>\n\${escapeHtml(b.snippet)}</div>\` : ''}
+            <div class="remed-box"><strong>🛠️ How & Where to Fix:</strong><br>\${escapeHtml(b.remediation)}</div>
+            <div class="action-bar">
+              <span style="font-size:0.75rem; color:var(--text-muted)">Ready for Antigravity, ChatGPT or Claude</span>
+              <button class="btn-copy" onclick="copyAiPrompt(\${idx}, this)">
+                📋 Copy Fix Prompt for AI
+              </button>
+            </div>
+            <textarea id="prompt-val-\${idx}" style="display:none;">\${escapeHtml(promptText)}</textarea>
           </div>
-        \`).join('');
+        \`;
+        }).join('');
       }
+    }
+
+    function generateFallbackPrompt(b) {
+      return \`### 🛡️ Engineering Guardian AI Remediation Request\\n\\n\` +
+        \`**Target File:** \`\${b.file}\${b.line ? ':' + b.line : ''}\`\\n\` +
+        \`**Severity:** \`\${b.severity}\` | **Issue:** \${b.title}\\n\\n\` +
+        \`**Problem:** \${b.message}\\n\\n\` +
+        (b.snippet ? \`**Current Code:**\\n\`\`\`typescript\\n\${b.snippet}\\n\`\`\`\\n\\n\` : '') +
+        \`**Required Fix:**\\n\${b.remediation}\\n\\n\` +
+        \`**Constraint:** Fix cleanly without breaking other logic, then run 'npm run guardian' to verify.\\n\`;
     }
 
     function escapeHtml(str) {
       if (!str) return '';
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function copyAiPrompt(idx, btn) {
+      const textarea = document.getElementById('prompt-val-' + idx);
+      if (textarea) {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+          const original = btn.innerHTML;
+          btn.innerHTML = '✅ Copied to Clipboard!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('copied');
+          }, 2500);
+        });
+      }
+    }
+
+    function copyMasterAiPlan() {
+      if (!currentReport || !currentReport.findings) return alert('No report loaded.');
+      const blockers = currentReport.findings.filter(f => f.severity === 'CRITICAL' || f.severity === 'HIGH');
+      if (blockers.length === 0) return alert('No blockers detected! Codebase is already clean.');
+
+      let masterPrompt = \`# 🛡️ Engineering Guardian Master Remediation Plan\\n\`;
+      masterPrompt += \`Connected Project: \${currentReport.connectedProject || 'Current Project'}\\n\`;
+      masterPrompt += \`Total Blockers: \${blockers.length}\\n\\n\`;
+      masterPrompt += \`Please fix the following issues in order, keeping all architectural boundaries intact:\\n\\n\`;
+
+      blockers.forEach((b, i) => {
+        masterPrompt += \`---\\n### [Blocker #\${i + 1}] \${b.title}\\n\`;
+        masterPrompt += \`- File: \`\${b.file}\${b.line ? ':' + b.line : ''}\`\\n\`;
+        masterPrompt += \`- Severity: \`\${b.severity}\`\\n\`;
+        masterPrompt += \`- Issue: \${b.message}\\n\`;
+        if (b.snippet) {
+          masterPrompt += \`\`\`typescript\\n\${b.snippet}\\n\`\`\`\\n\`;
+        }
+        masterPrompt += \`- Action: \${b.remediation}\\n\\n\`;
+      });
+
+      masterPrompt += \`---\\nAfter applying all fixes, run 'npm run guardian' to verify that all assurance gates pass!\\n\`;
+
+      navigator.clipboard.writeText(masterPrompt).then(() => {
+        const btn = document.getElementById('btnMasterPlan');
+        const orig = btn.innerText;
+        btn.innerText = '✅ Master Plan Copied!';
+        setTimeout(() => { btn.innerText = orig; }, 3000);
+        alert('Master AI Plan copied to clipboard! Paste it into Antigravity or ChatGPT to fix all blockers at once.');
+      });
+    }
+
+    async function generateAntigravityRules() {
+      const btn = document.getElementById('btnAgents');
+      btn.disabled = true;
+      btn.innerText = '⏳ Generating...';
+      try {
+        const res = await fetch('/api/antigravity', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || 'Antigravity AGENTS.md rules injected successfully!');
+      } catch (e) {
+        alert('Failed: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🤖 Inject AGENTS.md';
+      }
     }
 
     async function connectProject() {
@@ -505,6 +629,7 @@ function getDashboardHtml() {
         if (data.error) {
           alert('Error: ' + data.error);
         } else {
+          currentReport = data;
           renderDashboard(data);
         }
       } catch (err) {
@@ -522,6 +647,7 @@ function getDashboardHtml() {
       try {
         const res = await fetch('/api/audit', { method: 'POST' });
         const data = await res.json();
+        currentReport = data;
         renderDashboard(data);
       } finally {
         btn.disabled = false;
@@ -601,6 +727,54 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: err.message }));
       }
     });
+    return;
+  }
+
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/antigravity') {
+    try {
+      const agentsMdPath = path.join(activeProjectRoot, 'AGENTS.md');
+      const rulesContent = `# ENGINEERING GUARDIAN (CCG) RULES FOR AI AGENTS (ANTIGRAVITY / COPILOT)
+
+You are operating under the strict engineering safety gate enforced by Engineering Guardian (CCG / CCEG).
+Every code change must adhere to the 10-Engine Assurance Matrix:
+
+1. **Architecture & Boundaries:**
+   - Never reference \`SUPABASE_SERVICE_ROLE_KEY\`, \`AWS_SECRET_ACCESS_KEY\`, or private database credentials in client components (\`'use client'\` or \`components/*\`).
+   - Never import Node.js server modules (\`fs\`, \`child_process\`, \`pg\`) into client bundles.
+
+2. **Security & Vulnerabilities:**
+   - Never hardcode active credentials or sensitive API keys in source files.
+   - Never interpolate user-controlled variables into raw SQL queries (use parameterized \$1 or ORM builders).
+   - Enforce server-side session authentication on all administrative endpoints (\`/api/admin/*\`).
+   - Sanitize dynamic HTML using \`DOMPurify.sanitize(...)\` before using \`dangerouslySetInnerHTML\`.
+
+3. **Logic & Execution Flow:**
+   - Never leave asynchronous calls unawaited (floating promises).
+   - Never leave empty \`catch {}\` blocks that swallow runtime errors without logging or fallback state.
+
+4. **Performance & Denial-of-Wallet:**
+   - Never place database queries or HTTP fetches inside iteration loops (N+1 queries). Batch with \`.in(...)\` or \`Promise.all\`.
+   - Never use aggressive polling intervals (\`setInterval\` < 1000ms).
+   - Always bound queries with pagination (\`.limit(...)\` or \`.range(...)\`).
+
+5. **Database & Data Integrity:**
+   - Never execute destructive SQL (\`DROP TABLE\`, \`TRUNCATE\`) in migrations.
+   - Always enable Row Level Security on newly created tables (\`ENABLE ROW LEVEL SECURITY\`).
+
+6. **Concurrency & Race Conditions:**
+   - Avoid read-modify-write patterns on balances/counters without atomic SQL or database locks.
+   - Enforce \`Idempotency-Key\` on payment and checkout routes.
+
+7. **Verification Rule:**
+   - Always run \`npm run guardian\` or check the Guardian Dashboard before declaring a task complete!
+`;
+      fs.writeFileSync(agentsMdPath, rulesContent, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: `Injected AGENTS.md rules into ${activeProjectRoot}` }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
     return;
   }
 

@@ -63,6 +63,32 @@ export const ProtectedFiles = [
 ];
 
 /**
+ * Generates a prompt-engineered instruction ready to paste into Antigravity, ChatGPT, Claude, or Cursor
+ */
+export function generateAiPrompt(finding) {
+  const lineInfo = finding.line ? `:${finding.line}` : '';
+  let prompt = `### 🛡️ Engineering Guardian AI Remediation Request\n\n`;
+  prompt += `**Target File:** \`${finding.file}${lineInfo}\`\n`;
+  prompt += `**Severity:** \`${finding.severity}\` | **Defect ID:** \`${finding.id}\`\n`;
+  prompt += `**Defect Title:** ${finding.title}\n\n`;
+  prompt += `#### 📋 Problem Explanation:\n${finding.message}\n\n`;
+
+  if (finding.snippet) {
+    prompt += `#### 🔍 Current Problematic Code Snippet:\n\`\`\`typescript\n${finding.snippet}\n\`\`\`\n\n`;
+  }
+
+  prompt += `#### 🛠️ Exact Step-by-Step Remediation:\n${finding.remediation}\n\n`;
+
+  prompt += `#### ⚠️ Engineering Constraints:\n`;
+  prompt += `1. Apply the smallest, cleanest patch that directly solves the issue in \`${finding.file}\`.\n`;
+  prompt += `2. Maintain all existing caller interfaces and architectural separation.\n`;
+  prompt += `3. Do not suppress errors, comment out checks, or bypass validation.\n`;
+  prompt += `4. Confirm the fix by running \`npm run guardian\` or the Guardian Dashboard to prove the gate passes.\n`;
+
+  return prompt;
+}
+
+/**
  * Creates a normalized finding object
  */
 export function createFinding({
@@ -81,7 +107,7 @@ export function createFinding({
   remediation = '',
   requiresHumanAction = false
 }) {
-  return {
+  const findingObj = {
     id,
     engine,
     category,
@@ -98,4 +124,7 @@ export function createFinding({
     requiresHumanAction,
     timestamp: new Date().toISOString()
   };
+
+  findingObj.aiPrompt = generateAiPrompt(findingObj);
+  return findingObj;
 }

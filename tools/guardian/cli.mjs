@@ -110,8 +110,18 @@ async function main() {
       console.log('\n----------------------------------------------------------------');
     }
 
-    if (mediums.length > 0 && blockers.length === 0) {
-      console.log(`⚠️  ${mediums.length} Medium-risk warning(s) identified (non-blocking).`);
+    if (args.includes('--prompt') || args.includes('-prompt')) {
+      console.log('\n🤖 ============================================================');
+      console.log('   AI FIX PROMPTS (READY TO COPY INTO ANTIGRAVITY OR CHATGPT)');
+      console.log('================================================================\n');
+      blockers.slice(0, 5).forEach((b, idx) => {
+        console.log(`--- [PROMPT #${idx + 1}] ---`);
+        console.log(b.aiPrompt);
+        console.log('----------------------------------------------------------------\n');
+      });
+    } else if (blockers.length > 0) {
+      console.log('\n💡 TIP: Run with `--prompt` to print ready-to-paste AI fix prompts for Antigravity or ChatGPT!');
+      console.log('   Or open `guardian-dashboard.exe` to use 1-click "Copy Prompt for AI" buttons.');
     }
 
     console.log('\nAudit Summary:');
