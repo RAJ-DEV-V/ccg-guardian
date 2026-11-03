@@ -1,11 +1,13 @@
 {
   "verdict": "APPROVED",
   "mode": "diff",
-  "durationMs": 374,
-  "filesScannedCount": 25,
+  "durationMs": 213,
+  "filesScannedCount": 1,
   "gitStatus": {
-    "modifiedCount": 0,
-    "modifiedFiles": []
+    "modifiedCount": 1,
+    "modifiedFiles": [
+      "eports/guardian/latest.json"
+    ]
   },
   "findingsCount": 0,
   "blockerCount": 0,

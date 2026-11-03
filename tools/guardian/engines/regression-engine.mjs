@@ -114,7 +114,7 @@ export class RegressionEngine extends BaseEngine {
       if (isHigh) {
         this.addFinding({
           id: 'REGR-HIGH-BLAST-RADIUS',
-          severity: isCritical ? Severity.HIGH : Severity.MEDIUM,
+          severity: Severity.MEDIUM,
           title: `High Blast Radius on Modified Module: ${normalized} (${blastRadius.length} dependents)`,
           message: `Modifications to '${normalized}' directly or transitively impact ${blastRadius.length} downstream components and route handlers. High blast-radius changes have high risk of introducing silent regressions.`,
           file: normalized,
